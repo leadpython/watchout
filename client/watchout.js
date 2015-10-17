@@ -78,6 +78,7 @@ var detectCollision = function(enemy, scoreUpdatesCB) {
   var distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
   if (distance < radiusSum) {
     player.style('fill', 'url(#sad)');
+    d3.select('.board').style('background-color', 'red');
     if(!enemiesData[enemyId].collision) {
       enemiesData[enemyId].collision = true;
       gameStats.collisionsCounter++;
@@ -87,6 +88,7 @@ var detectCollision = function(enemy, scoreUpdatesCB) {
   if (distance > radiusSum) {
     if (enemiesData[enemyId].collision) {
       player.style('fill', 'url(#smiley)');
+      d3.select('.board').style('background-color', 'lightgrey');
       enemiesData[enemyId].collision = false;      
     }
   }

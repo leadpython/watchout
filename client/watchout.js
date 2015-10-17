@@ -1,6 +1,6 @@
 // start slingin' some d3 here.
 var gameParameters = {
-  enemyCount: 5,
+  enemyCount: 20,
   boardWidth: 1280,
   boardHeight: 720,
   difficultyLevel: 0.5 
@@ -31,7 +31,7 @@ for (var i = 0; i < gameParameters.enemyCount; i++) {
 var playerData = {
   x: 0.5 * gameParameters.boardWidth,
   y: 0.5 * gameParameters.boardHeight,
-  radius: 10
+  radius: 20
 }
 
 var board = d3.select('body').selectAll('svg')
@@ -45,14 +45,14 @@ var playerAsSmiley = d3.select('.board').selectAll('svg').data([['smiley', '/Use
               .attr('patternUnits', 'objectBoundingBox')
               .attr('x', 0)
               .attr('y', 0)
-              .attr('height', 20)
-              .attr('width', 20)
+              .attr('height', 40)
+              .attr('width', 40)
               .append('image')
               .attr('xlink:href', function(d) { return d[1]; })
               .attr('x', 0)
               .attr('y', 0)
-              .attr('height', 20)
-              .attr('width', 20)
+              .attr('height', 40)
+              .attr('width', 40)
 
 var player = d3.select('.board').selectAll('svg').data([playerData]).enter()
              .append('svg:circle')
@@ -122,6 +122,7 @@ var tweenWithCollisionDetection = function() {
     }
     enemy.attr('cx', enemyNextPos.x)
          .attr('cy', enemyNextPos.y)
+         .attr('transform', 'rotate(' + 1440*t + ' '+ enemyNextPos.x + ',' + enemyNextPos.y +')')
     detectCollision(enemy, updateScoresOnCollision);
   }
 }
@@ -135,7 +136,7 @@ var enemiesAsAsteroids = d3.select('.board').selectAll('svg').data([0]).enter()
               .attr('height', 20)
               .attr('width', 20)
               .append('image')
-              .attr('xlink:href', '/Users/student/Desktop/2015-10-watchout/client/asteroid.png')
+              .attr('xlink:href', '/Users/student/Desktop/2015-10-watchout/client/shuriken.png')
               .attr('x', 0)
               .attr('y', 0)
               .attr('height', 20)

@@ -1,8 +1,8 @@
 // start slingin' some d3 here.
 var gameParameters = {
   enemyCount: 5,
-  boardWidth: 700,
-  boardHeight: 450,
+  boardWidth: 1280,
+  boardHeight: 720,
   difficultyLevel: 0.5 
 }
 
@@ -38,14 +38,29 @@ var board = d3.select('body').selectAll('svg')
             .attr('width', gameParameters.boardWidth)
             .attr('height', gameParameters.boardHeight);
 
+var playerAsSmiley = d3.select('.board').selectAll('svg').data([['smiley', '/Users/student/Desktop/2015-10-watchout/client/smiley.png'], ['sad', '/Users/student/Desktop/2015-10-watchout/client/smiley_sad.png']]).enter()
+              .append('defs')
+              .append('pattern')
+              .attr('id', function(d) { return d[0]; })
+              .attr('patternUnits', 'objectBoundingBox')
+              .attr('x', 0)
+              .attr('y', 0)
+              .attr('height', 20)
+              .attr('width', 20)
+              .append('image')
+              .attr('xlink:href', function(d) { return d[1]; })
+              .attr('x', 0)
+              .attr('y', 0)
+              .attr('height', 20)
+              .attr('width', 20)
+
 var player = d3.select('.board').selectAll('svg').data([playerData]).enter()
              .append('svg:circle')
              .attr('class', 'player')
+             .style('fill', 'url(#smiley)')
              .attr('r', function(d) { return d.radius; })
              .attr('fill', '#ff6600')
              .attr('transform', function(d) { return 'translate('+ d.x + ',' + d.y + ')'; });
-             // .attr('cx', function(d) { return d.x * gameParameters.boardWidth; })
-             // .attr('cy', function(d) { return d.y * gameParameters.boardHeight; });
 
 var drag = d3.behavior.drag()
            .on('drag', function() {
@@ -56,21 +71,24 @@ var drag = d3.behavior.drag()
 player.call(drag);
 
 var detectCollision = function(enemy, scoreUpdatesCB) {
-  // debugger;
   var enemyId = Number(enemy.attr('id'));
   var radiusSum = Number(enemy.attr('r')) + playerData.radius;
   var xDiff = Number(enemy.attr('cx')) - playerData.x;
   var yDiff = Number(enemy.attr('cy')) - playerData.y;
   var distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
   if (distance < radiusSum) {
+    player.style('fill', 'url(#sad)');
     if(!enemiesData[enemyId].collision) {
       enemiesData[enemyId].collision = true;
-      gameStats.collisionsCounter ++;
+      gameStats.collisionsCounter++;
     }
     scoreUpdatesCB();
   }
   if (distance > radiusSum) {
-    enemiesData[enemyId].collision = false;
+    if (enemiesData[enemyId].collision) {
+      player.style('fill', 'url(#smiley)');
+      enemiesData[enemyId].collision = false;      
+    }
   }
 };
 
@@ -84,7 +102,6 @@ var updateScoresOnCollision = function() {
 };
 
 var tweenWithCollisionDetection = function() {
-  // debugger;
   var enemy = d3.select(this);
   var startPos = {
     x: Number(enemy.attr('cx')),
@@ -108,10 +125,25 @@ var tweenWithCollisionDetection = function() {
     detectCollision(enemy, updateScoresOnCollision);
   }
 }
-
+var enemiesAsAsteroids = d3.select('.board').selectAll('svg').data([0]).enter()
+              .append('defs')
+              .append('pattern')
+              .attr('id', 'image')
+              .attr('patternUnits', 'objectBoundingBox')
+              .attr('x', 0)
+              .attr('y', 0)
+              .attr('height', 20)
+              .attr('width', 20)
+              .append('image')
+              .attr('xlink:href', '/Users/student/Desktop/2015-10-watchout/client/asteroid.png')
+              .attr('x', 0)
+              .attr('y', 0)
+              .attr('height', 20)
+              .attr('width', 20)
 var enemies = d3.select('.board').selectAll('svg').data(enemiesData).enter()
               .append('svg:circle')
               .attr('class', 'enemy')
+              .style('fill', 'url(#image)')
               .attr('r', 0)
               .transition()
               .duration(1000 / gameParameters.difficultyLevel)
@@ -119,32 +151,14 @@ var enemies = d3.select('.board').selectAll('svg').data(enemiesData).enter()
               .attr('id', function(d) { return d.id; })
               .attr('cx', function(d) { return d.x; })
               .attr('cy', function(d) { return d.y; });
-              // .transition()
-              // .duration(1000 / gameParameters.difficultyLevel)
-              // .tween('custom', tweenWithCollisionDetection)
-              // .transition()
-              // .duration(1000 / gameParameters.difficultyLevel)
-              // .tween('custom', tweenWithCollisionDetection);
-              
-// var setEnemiesPosition = function(enemies) {
-//   enemies.transition()
-//          .duration(1000 / gameParameters.difficultyLevel)
-//          .attr('r', 10)
-//          .attr('cx', function(d) { return d.x; })
-//          .attr('cy', function(d) { return d.y; });  
-// };
 
-// setEnemiesPosition(enemies);
 
-// setInterval(function() { detectCollision(enemies, updateScoresOnCollision); }, 10);
 
 setInterval(function() {
-  // debugger;
   var enemies = d3.selectAll('.enemy').data(enemiesData);
   enemies.transition()
          .duration(1000 / gameParameters.difficultyLevel)
          .tween('custom', tweenWithCollisionDetection);
-  // debugger;
 }, 1000 / gameParameters.difficultyLevel);
 
 setInterval(function() {

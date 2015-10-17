@@ -26,9 +26,29 @@ for (var i = 0; i < gameParameters.enemyCount; i++) {
   enemiesData.push(new Enemy(i));
 }
 
+var playerData = {
+  x: 0.5,
+  y: 0.5
+}
+
 var board = d3.select('body').selectAll('svg')
             .attr('width', gameParameters.boardWidth)
             .attr('height', gameParameters.boardHeight);
+
+var player = d3.select('.board').selectAll('svg').data([playerData]).enter()
+             .append('svg:circle')
+             .attr('class', 'player')
+             .attr('r', 10)
+             .attr('fill', '#ff6600')
+             .attr('transform', function(d) { return 'translate('+d.x * gameParameters.boardWidth + ',' + d.y * gameParameters.boardHeight + ')'; });
+             // .attr('cx', function(d) { return d.x * gameParameters.boardWidth; })
+             // .attr('cy', function(d) { return d.y * gameParameters.boardHeight; });
+
+var drag = d3.behavior.drag()
+           .on('drag', function() {
+              player.attr('transform', 'translate('+ Math.min(gameParameters.boardWidth, Math.max(0, d3.event.x)) + ',' + Math.min(gameParameters.boardHeight, Math.max(0, d3.event.y)) + ')');
+})
+player.call(drag);
 
 var enemies = d3.select('.board').selectAll('svg').data(enemiesData).enter()
               .append('svg:circle')
@@ -51,25 +71,7 @@ setInterval(function() {
   setEnemiesPosition(enemies);
 }, 1000 / gameParameters.difficultyLevel);
 
-var playerData = {
-  x: 0.5,
-  y: 0.5
-}
 
-var player = d3.select('.board').selectAll('svg').data([playerData]).enter()
-             .append('svg:circle')
-             .attr('class', 'player')
-             .attr('r', 10)
-             .attr('fill', '#ff6600')
-             .attr('transform', function(d) { return 'translate('+d.x * gameParameters.boardWidth + ',' + d.y * gameParameters.boardHeight + ')'; });
-             // .attr('cx', function(d) { return d.x * gameParameters.boardWidth; })
-             // .attr('cy', function(d) { return d.y * gameParameters.boardHeight; });
-
-var drag = d3.behavior.drag()
-           .on('drag', function() {
-              player.attr('transform', 'translate('+ d3.event.x + ',' + d3.event.y + ')');
-})
-player.call(drag);
 // var updateScore = function(newScore) {
 //   gameStats.score = newScore;
 // };

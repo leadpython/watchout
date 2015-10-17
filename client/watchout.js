@@ -10,6 +10,7 @@ var Enemy = function(id) {
   this.id = id;
   this.x = Math.random() * gameParameters.boardWidth;
   this.y = Math.random() * gameParameters.boardHeight;
+  this.collision = false;
 };
 Enemy.prototype.setNewPosition =  function() {
   this.x = Math.random()* gameParameters.boardWidth;
@@ -55,12 +56,21 @@ var drag = d3.behavior.drag()
 player.call(drag);
 
 var detectCollision = function(enemy, scoreUpdatesCB) {
-  var radiusSum = enemy.attr('r') + player.radius;
-  var xDiff = enemy.attr('cx') - player.x;
-  var yDiff = enemy.attr('cy') - player.y;
+  // debugger;
+  var enemyId = Number(enemy.attr('id'));
+  var radiusSum = Number(enemy.attr('r')) + playerData.radius;
+  var xDiff = Number(enemy.attr('cx')) - playerData.x;
+  var yDiff = Number(enemy.attr('cy')) - playerData.y;
   var distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
   if (distance < radiusSum) {
+    if(!enemiesData[enemyId].collision) {
+      enemiesData[enemyId].collision = true;
+      gameStats.collisionsCounter ++;
+    }
     scoreUpdatesCB();
+  }
+  if (distance > radiusSum) {
+    enemiesData[enemyId].collision = false;
   }
 };
 
@@ -69,28 +79,33 @@ var updateScoresOnCollision = function() {
     gameStats.highscore = gameStats.score;
   }
   gameStats.score = 0;
-  gameStats.collisionsCounter++;
+  d3.select('.highscoreValue').text(gameStats.highscore);
+  d3.select('.collisionsCounter').text(gameStats.collisionsCounter);
 };
 
-var tweenWithCollisionDetection =function(endData) {
+var tweenWithCollisionDetection = function() {
   // debugger;
   var enemy = d3.select(this);
   var startPos = {
-    x: enemy.attr('cx'),
-    y: enemy.attr('cy')
+    x: Number(enemy.attr('cx')),
+    y: Number(enemy.attr('cy'))
   };
+  var enemyId = Number(enemy.attr('id'));
+  enemiesData[enemyId].collision = false;
   var endPos = {
-    x: endData.x,
-    y: endData.y  
+    x: Math.random()* gameParameters.boardWidth,
+    y: Math.random() * gameParameters.boardHeight 
   };
   return function(t) {
-    detectCollision(enemy, updateScoresOnCollision);
+    enemiesData[enemyId].x = startPos.x + (endPos.x - startPos.x)*t;
+    enemiesData[enemyId].y = startPos.y + (endPos.y - startPos.y)*t;
     var enemyNextPos = {
       x: startPos.x + (endPos.x - startPos.x)*t, 
       y: startPos.y + (endPos.y - startPos.y)*t
     }
     enemy.attr('cx', enemyNextPos.x)
          .attr('cy', enemyNextPos.y)
+    detectCollision(enemy, updateScoresOnCollision);
   }
 }
 
@@ -100,24 +115,36 @@ var enemies = d3.select('.board').selectAll('svg').data(enemiesData).enter()
               .attr('r', 0)
               .transition()
               .duration(1000 / gameParameters.difficultyLevel)
-              .tween('custom', tweenWithCollisionDetection);
+              .attr('r', 10)
+              .attr('id', function(d) { return d.id; })
+              .attr('cx', function(d) { return d.x; })
+              .attr('cy', function(d) { return d.y; });
+              // .transition()
+              // .duration(1000 / gameParameters.difficultyLevel)
+              // .tween('custom', tweenWithCollisionDetection)
+              // .transition()
+              // .duration(1000 / gameParameters.difficultyLevel)
+              // .tween('custom', tweenWithCollisionDetection);
               
-var setEnemiesPosition = function(enemies) {
-  enemies.transition()
-         .duration(1000 / gameParameters.difficultyLevel)
-         .attr('r', 10)
-         .attr('cx', function(d) { return d.x; })
-         .attr('cy', function(d) { return d.y; });  
-};
-debugger;
-setEnemiesPosition(enemies);
+// var setEnemiesPosition = function(enemies) {
+//   enemies.transition()
+//          .duration(1000 / gameParameters.difficultyLevel)
+//          .attr('r', 10)
+//          .attr('cx', function(d) { return d.x; })
+//          .attr('cy', function(d) { return d.y; });  
+// };
+
+// setEnemiesPosition(enemies);
 
 // setInterval(function() { detectCollision(enemies, updateScoresOnCollision); }, 10);
 
 setInterval(function() {
-  enemiesData.forEach(function(enemy) { enemy.setNewPosition(); });
-  enemies.data(enemiesData);
-  setEnemiesPosition(enemies);
+  // debugger;
+  var enemies = d3.selectAll('.enemy').data(enemiesData);
+  enemies.transition()
+         .duration(1000 / gameParameters.difficultyLevel)
+         .tween('custom', tweenWithCollisionDetection);
+  // debugger;
 }, 1000 / gameParameters.difficultyLevel);
 
 setInterval(function() {
